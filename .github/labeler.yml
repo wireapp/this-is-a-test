@@ -36,4 +36,4 @@
     - 'bin/foobar/.*'
 'comp: Readme':
   files:
-   - all: ['README.md']
+   - 'README.md'
