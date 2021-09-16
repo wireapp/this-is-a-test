@@ -32,6 +32,8 @@
 
 # Components
 'comp: FooBar':
+  files:
     - 'bin/foobar/.*'
 'comp: Readme':
-    - all: ['README.md']
+  files:
+   - all: ['README.md']
