@@ -5,8 +5,7 @@ on:
     types: [opened, synchronize]
 
 jobs:
-  label:
-    name: Label PR based on title
+  triage:
     runs-on: ubuntu-latest
     steps:
       - uses: srvaroa/labeler@v0.3
