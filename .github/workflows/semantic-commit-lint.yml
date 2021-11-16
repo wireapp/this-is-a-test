@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CUSTOM_PR_LABEL: "Fix PR Title 🤦‍♂️"
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -60,9 +61,14 @@ jobs:
           # merge commit, and it's easy to commit this by mistake. Enable this option
           # to also validate the commit message for one commit PRs.
           validateSingleCommit: true
-      - name: Add Failure LabelG
+      - name: Add Failure Label
         if: failure()
         run: | 
-          gh api --silent repos/{owner}/{repo}/labels -f name="Fix Pr Title 🤦‍♂️" -f color="FF0000"
-          gh pr edit "${HEAD}" --add-label "Fix Pr Title 🤦‍♂️"
+          gh api --silent repos/{owner}/{repo}/labels -f name="${CUSTOM_PR_LABEL}" -f color="FF0000"
+          gh pr edit "${HEAD}" --add-label "${CUSTOM_PR_LABEL}"
+      - name: Remove Failure Label
+        if: success()
+        run: |
+          gh pr edit "${HEAD}" --remove-label "${CUSTOM_PR_LABEL}"
+
          
