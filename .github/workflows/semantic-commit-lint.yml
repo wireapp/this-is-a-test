@@ -18,20 +18,12 @@ jobs:
           
       - name: Set environment variables
         run: | 
-          echo "BRANCH_NAME=$(git branch --show-current)" >> $GITHUB_ENV
           echo "HEAD=${{github.head_ref}}" >> $GITHUB_ENV
-          
-      - name: print
-        run: | 
-          echo "BRANCH_NAME=$BRANCH_NAME"
-          echo "HEAD=$HEAD"
           
       # Please look up the latest version from
       # https://github.com/amannn/action-semantic-pull-request/releases
       - name: Run Semantic Commint Linter
         uses: amannn/action-semantic-pull-request@v3.4.6
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           # Configure which types are allowed.
           # Default: https://github.com/commitizen/conventional-commit-types
@@ -70,5 +62,3 @@ jobs:
         if: success()
         run: |
           gh pr edit "${HEAD}" --remove-label "${CUSTOM_PR_LABEL}"
-
-         
