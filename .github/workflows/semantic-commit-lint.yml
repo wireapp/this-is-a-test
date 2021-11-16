@@ -62,5 +62,7 @@ jobs:
           validateSingleCommit: true
       - name: Add Failure LabelG
         if: failure()
-        run: gh pr edit "${HEAD}" --add-label "Fix Pr Title 🤦‍♂️"
+        run: | 
+          gh api --silent repos/{owner}/{repo}/labels -f name="Fix Pr Title 🤦‍♂️" -f color="FF0000"
+          gh pr edit "${HEAD}" --add-label "Fix Pr Title 🤦‍♂️"
          
