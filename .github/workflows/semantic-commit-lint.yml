@@ -53,7 +53,7 @@ jobs:
           # merge commit, and it's easy to commit this by mistake. Enable this option
           # to also validate the commit message for one commit PRs.
           validateSingleCommit: true
-      - name: Add Failure Label
+      - name: Add Failure LabelG
         if: failure()
-        run: gh pr edit "${BRANCH_NAME}" --add-label "Fix Pr Title 🤦‍♂️"
+        run: gh pr edit "${GITHUB_REF}" --add-label "Fix Pr Title 🤦‍♂️"
          
