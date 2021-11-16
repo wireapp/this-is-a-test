@@ -22,8 +22,8 @@ jobs:
           
       - name: print
         run: | 
-          echo "$BRANCH_NAME"
-          echo "$HEAD"
+          echo "BRANCH_NAME=$BRANCH_NAME"
+          echo "HEAD=$HEAD"
           
       # Please look up the latest version from
       # https://github.com/amannn/action-semantic-pull-request/releases
