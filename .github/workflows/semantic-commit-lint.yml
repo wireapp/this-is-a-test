@@ -16,7 +16,14 @@ jobs:
           fetch-depth: 0
           
       - name: Set environment variables
-        run: echo "BRANCH_NAME=$(git branch --show-current)" >> $GITHUB_ENV
+        run: | 
+          echo "BRANCH_NAME=$(git branch --show-current)" >> $GITHUB_ENV
+          echo "HEAD=${{github.head.ref}}" >> $GITHUB_ENV
+          
+      - name: print
+        run: | 
+          echo "$BRANCH_NAME"
+          echo "$HEAD"
           
       # Please look up the latest version from
       # https://github.com/amannn/action-semantic-pull-request/releases
@@ -55,5 +62,5 @@ jobs:
           validateSingleCommit: true
       - name: Add Failure LabelG
         if: failure()
-        run: gh pr edit "${GITHUB_REF}" --add-label "Fix Pr Title 🤦‍♂️"
+        run: gh pr edit "${HEAD}" --add-label "Fix Pr Title 🤦‍♂️"
          
