@@ -18,7 +18,7 @@ jobs:
       - name: Set environment variables
         run: | 
           echo "BRANCH_NAME=$(git branch --show-current)" >> $GITHUB_ENV
-          echo "HEAD=${{github.head.ref}}" >> $GITHUB_ENV
+          echo "HEAD=${{github.head_ref}}" >> $GITHUB_ENV
           
       - name: print
         run: | 
