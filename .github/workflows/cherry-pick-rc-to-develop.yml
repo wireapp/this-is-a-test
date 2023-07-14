@@ -26,6 +26,7 @@ jobs:
                   PREFIX=$(echo $PR_BRANCH | cut -d'/' -f 1)
                   SUFFIX=$(echo $PR_BRANCH | cut -d'/' -f 3-)
                   NEW_BRANCH_NAME="$PREFIX/$SUFFIX"
+                  echo "New branch name: $NEW_BRANCH_NAME"
                   echo "::set-output name=newBranchName::$NEW_BRANCH_NAME"
 
             - name: Cherry-pick commits
