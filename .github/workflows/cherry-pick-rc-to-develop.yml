@@ -23,9 +23,7 @@ jobs:
               id: extract
               run: |
                   PR_BRANCH="${{ github.event.pull_request.head.ref }}"
-                  PREFIX=$(echo $PR_BRANCH | cut -d'/' -f 1)
-                  SUFFIX=$(echo $PR_BRANCH | cut -d'/' -f 3-)
-                  NEW_BRANCH_NAME="$PREFIX/$SUFFIX"
+                  NEW_BRANCH_NAME=$(echo $PR_BRANCH | sed 's|/rc-|/|')
                   echo "New branch name: $NEW_BRANCH_NAME"
                   echo "::set-output name=newBranchName::$NEW_BRANCH_NAME"
 
