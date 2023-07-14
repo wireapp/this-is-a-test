@@ -31,11 +31,13 @@ jobs:
               run: |
                 git fetch origin develop:develop
                 git checkout -b ${{ steps.extract.outputs.newBranchName }} develop
+                git config user.email "action@github.com"
+                git config user.name "GitHub Action"
                 COMMITS=$(git log --pretty=format:"%H" --reverse ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
                 for COMMIT in $COMMITS; do
                   git cherry-pick $COMMIT --strategy-option ours || true
                   git add .
-                  git cherry-pick --continue
+                  git cherry-pick --continue || true
                 done
                 git push origin ${{ steps.extract.outputs.newBranchName }}
 
