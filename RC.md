@@ -5,7 +5,7 @@ Some changes in RC
 
 change 1 rc
 
-change 2 rc
+fix 2 rc
 
 change 3 rc
 
