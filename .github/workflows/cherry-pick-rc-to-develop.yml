@@ -38,7 +38,9 @@ jobs:
                 echo "Cherry-picking these commits: $COMMITS"
                 for COMMIT in $COMMITS; do
                   git cherry-pick -x $COMMIT --strategy-option ours || \
-                  (git add . && git commit -m "Conflicts from commit $COMMIT")
+                  (CONFLICTED_FILES=$(git diff --name-only --diff-filter=U) && \
+                  echo "Conflicted files: $CONFLICTED_FILES" && \
+                  git add . && git commit -m "Conflicts from commit $COMMIT")
                 done
                 git push origin ${{ steps.extract.outputs.newBranchName }}-conflicts
                 git checkout ${{ steps.extract.outputs.newBranchName }}
