@@ -22,29 +22,39 @@ jobs:
             - name: Extract branch name and remove prefix
               id: extract
               run: |
-                  PR_BRANCH="${{ github.event.pull_request.head.ref }}"
-                  NEW_BRANCH_NAME=$(echo $PR_BRANCH | sed 's|/rc-|/|')
-                  echo "New branch name: $NEW_BRANCH_NAME"
-                  echo "::set-output name=newBranchName::$NEW_BRANCH_NAME"
+                PR_BRANCH="${{ github.event.pull_request.head.ref }}"
+                NEW_BRANCH_NAME=$(echo $PR_BRANCH | sed 's|/rc-|/|')
+                echo "New branch name: $NEW_BRANCH_NAME"
+                echo "::set-output name=newBranchName::$NEW_BRANCH_NAME"
 
             - name: Cherry-pick commits
               run: |
                 git fetch origin develop:develop
                 git checkout -b ${{ steps.extract.outputs.newBranchName }} develop
+                git checkout -b ${{ steps.extract.outputs.newBranchName }}-conflicts
                 COMMITS=$(git log --pretty=format:"%H" --reverse ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
                 echo "Cherry-picking these commits: $COMMITS"
                 for COMMIT in $COMMITS; do
-                  git cherry-pick -x $COMMIT --strategy-option ours || true
-                  git add .
-                  git cherry-pick --continue || true
+                  git cherry-pick -x $COMMIT --strategy-option ours || \
+                  (git add . && git commit -m "Conflicts from commit $COMMIT")
                 done
+                git push origin ${{ steps.extract.outputs.newBranchName }}-conflicts
+                git checkout ${{ steps.extract.outputs.newBranchName }}
+                git cherry-pick ${{ steps.extract.outputs.newBranchName }}-conflicts^..${{ steps.extract.outputs.newBranchName }}-conflicts
                 git push origin ${{ steps.extract.outputs.newBranchName }}
 
-            - name: Create PR
-              id: cpr
+            - name: Create conflict PR
               uses: peter-evans/create-pull-request@v5
               with:
-                  title: Cherry-pick to develop
-                  base: develop
-                  branch: "${{ steps.extract.outputs.newBranchName }}"
-                  body: ${{ github.event.pull_request.body }}
+                title: Handle conflicts from cherry-pick
+                base: ${{ steps.extract.outputs.newBranchName }}
+                branch: "${{ steps.extract.outputs.newBranchName }}-conflicts"
+                body: Conflicts from cherry-pick
+
+            - name: Create PR
+              uses: peter-evans/create-pull-request@v5
+              with:
+                title: ${{ github.event.pull_request.title }}
+                base: develop
+                branch: "${{ steps.extract.outputs.newBranchName }}"
+                body: ${{ github.event.pull_request.body }}
