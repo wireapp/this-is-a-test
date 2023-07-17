@@ -15,6 +15,6 @@ fix 5 rc
 
 fix 6 rc
 
-change 7 rc
+fix 7 rc
 
-change 8 rc
+fix 8 rc
