@@ -13,7 +13,7 @@ fix 4 rc
 
 fix 5 rc
 
-Change 6 rc
+fix 6 rc
 
 Change 7 rc
 
