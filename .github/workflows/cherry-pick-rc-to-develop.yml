@@ -37,15 +37,17 @@ jobs:
                 COMMITS=$(git log --pretty=format:"%H" --reverse ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
                 echo "Cherry-picking these commits: $COMMITS"
                 for COMMIT in $COMMITS; do
-                  git cherry-pick -x $COMMIT --strategy-option ours || \
-                  (CONFLICTED_FILES=$(git diff --name-only --diff-filter=U) && \
-                  echo "Conflicted files: $CONFLICTED_FILES" && \
-                  git add . && git commit -m "Conflicts from commit $COMMIT")
+                  git cherry-pick -x $COMMIT || true
+                  if [ "$(git diff --check)" != "" ]; then
+                    git add .
+                    git commit -m "Conflicts from commit $COMMIT"
+                  fi
                 done
                 git push origin ${{ steps.extract.outputs.newBranchName }}-conflicts
                 git checkout ${{ steps.extract.outputs.newBranchName }}
                 git cherry-pick ${{ steps.extract.outputs.newBranchName }}-conflicts^..${{ steps.extract.outputs.newBranchName }}-conflicts
                 git push origin ${{ steps.extract.outputs.newBranchName }}
+            
 
             - name: Create conflict PR
               uses: peter-evans/create-pull-request@v5
