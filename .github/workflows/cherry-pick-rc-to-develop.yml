@@ -37,10 +37,8 @@ jobs:
                 echo "Cherry-picking these commits: $COMMITS"
                 for COMMIT in $COMMITS; do
                   git cherry-pick -x $COMMIT --strategy-option theirs || true
-                  if [ "$(git diff --check)" != "" ]; then
-                    git add .
-                    git commit -m "Conflicts from commit $COMMIT"
-                  fi
+                  git add .
+                  git commit -m "Cherry-picked commit $COMMIT"
                 done
                 git push origin ${{ steps.extract.outputs.newBranchName }}
 
@@ -51,4 +49,3 @@ jobs:
                 base: develop
                 branch: "${{ steps.extract.outputs.newBranchName }}"
                 body: ${{ github.event.pull_request.body }}
-
