@@ -36,35 +36,13 @@ jobs:
                 COMMITS=$(git log --pretty=format:"%H" --reverse ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
                 echo "Cherry-picking these commits: $COMMITS"
                 for COMMIT in $COMMITS; do
-                  git cherry-pick -x $COMMIT || \
-                  (git add . && git commit -m "Conflicts from commit $COMMIT")
-                done
-                git push origin ${{ steps.extract.outputs.newBranchName }}
-              id: cherry-pick
-
-            - name: Handle conflicts and create conflict branch
-              run: |
-                git checkout -b ${{ steps.extract.outputs.newBranchName }}-conflicts
-                git config user.email "action@github.com"
-                git config user.name "GitHub Action"
-                COMMITS=$(git log --pretty=format:"%H" --reverse ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
-                echo "Cherry-picking these commits: $COMMITS"
-                for COMMIT in $COMMITS; do
-                  git cherry-pick -x $COMMIT || true
+                  git cherry-pick -x $COMMIT --strategy-option theirs || true
                   if [ "$(git diff --check)" != "" ]; then
                     git add .
                     git commit -m "Conflicts from commit $COMMIT"
                   fi
                 done
-                git push origin ${{ steps.extract.outputs.newBranchName }}-conflicts
-
-            - name: Create conflict PR
-              uses: peter-evans/create-pull-request@v5
-              with:
-                title: Handle conflicts from cherry-pick
-                base: ${{ steps.extract.outputs.newBranchName }}
-                branch: "${{ steps.extract.outputs.newBranchName }}-conflicts"
-                body: Conflicts from cherry-pick
+                git push origin ${{ steps.extract.outputs.newBranchName }}
 
             - name: Create PR
               uses: peter-evans/create-pull-request@v5
@@ -73,3 +51,4 @@ jobs:
                 base: develop
                 branch: "${{ steps.extract.outputs.newBranchName }}"
                 body: ${{ github.event.pull_request.body }}
+
