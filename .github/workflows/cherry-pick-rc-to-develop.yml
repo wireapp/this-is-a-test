@@ -42,6 +42,7 @@ jobs:
           fi
 
       - name: Cherry-pick commits
+        if: steps.check_changes.outputs.shouldCherryPick == 'true'
         run: |
           git fetch origin develop:develop
           git checkout -b ${{ steps.extract.outputs.newBranchName }} develop
