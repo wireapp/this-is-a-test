@@ -3,7 +3,7 @@ This is a test repository
 
 This is commit from rc pr branch
 
-some fix 1
+some fix 1 test
 
 some fix 2
 

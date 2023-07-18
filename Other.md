@@ -1,6 +1,6 @@
 # New file
 
-some fix 1
+some fix 1 test
 
 some fix 2
 
