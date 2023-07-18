@@ -38,13 +38,14 @@ jobs:
             echo "::set-output name=shouldCherryPick::false"
           fi
 
-      - name: Cherry-pick commit
-        if: steps.check_changes.outputs.shouldCherryPick == 'true'
+      - name: Cherry-pick commits
         run: |
           git fetch origin develop:develop
           git checkout -b ${{ steps.extract.outputs.newBranchName }} develop
           # Cherry-picking the last commit on the base branch
-          git cherry-pick -x ${{ github.event.pull_request.merge_commit_sha }} || true
+          git cherry-pick -x ${{ github.event.pull_request.merge_commit_sha }} --strategy-option theirs || true
+          git add .
+          git commit -m "Cherry-picked commit ${{ github.event.pull_request.merge_commit_sha }}"
           git push origin ${{ steps.extract.outputs.newBranchName }}
 
       - name: Create PR
