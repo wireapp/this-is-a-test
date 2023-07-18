@@ -5,6 +5,6 @@ This is commit from rc pr branch
 
 some fix 1
 
-chore 2
+some fix 2
 
 chore 3
