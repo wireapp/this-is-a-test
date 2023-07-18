@@ -38,6 +38,11 @@ jobs:
             echo "::set-output name=shouldCherryPick::false"
           fi
 
+      - name: Set Git user
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+
       - name: Cherry-pick commits
         run: |
           git fetch origin develop:develop
@@ -45,7 +50,7 @@ jobs:
           # Cherry-picking the last commit on the base branch
           git cherry-pick -x ${{ github.event.pull_request.merge_commit_sha }} --strategy-option theirs || true
           git add .
-          git commit -m "Cherry-picked commit ${{ github.event.pull_request.merge_commit_sha }}"
+          git cherry-pick --continue || true
           git push origin ${{ steps.extract.outputs.newBranchName }}
 
       - name: Create PR
