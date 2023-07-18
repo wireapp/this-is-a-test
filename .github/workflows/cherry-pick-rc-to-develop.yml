@@ -1,48 +1,60 @@
 name: "Cherry-pick from rc to develop"
 
 on:
-    pull_request:
-        branches:
-            - release/candidate
-        types:
-            - closed
+  pull_request:
+    branches:
+      - release/candidate
+    types:
+      - closed
 
 jobs:
-    cherry-pick:
-        runs-on: ubuntu-latest
-        if: github.event.pull_request.merged == true
+  cherry-pick:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v3
-              with:
-                  submodules: recursive # Needed in order to fetch Kalium sources for building
-                  fetch-depth: 0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
-            - name: Extract branch name and remove prefix
-              id: extract
-              run: |
-                  PR_BRANCH="${{ github.event.pull_request.head.ref }}"
-                  PREFIX=$(echo $PR_BRANCH | cut -d'/' -f 1)
-                  SUFFIX=$(echo $PR_BRANCH | cut -d'/' -f 3-)
-                  NEW_BRANCH_NAME="$PREFIX/$SUFFIX"
-                  echo "::set-output name=newBranchName::$NEW_BRANCH_NAME"
+      - name: Append -cherry-pick to branch name
+        id: extract
+        run: |
+          PR_BRANCH="${{ github.event.pull_request.head.ref }}"
+          NEW_BRANCH_NAME="${PR_BRANCH}-cherry-pick"
+          echo "New branch name: $NEW_BRANCH_NAME"
+          echo "::set-output name=newBranchName::$NEW_BRANCH_NAME"
 
-            - name: Cherry-pick commits
-              run: |
-                  git fetch origin develop:develop
-                  git checkout -b ${{ steps.extract.outputs.newBranchName }} develop
-                  COMMITS=$(git log --pretty=format:"%H" --reverse ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
-                  for COMMIT in $COMMITS; do
-                    git cherry-pick $COMMIT --strategy-option ours
-                  done
-                  git push origin ${{ steps.extract.outputs.newBranchName }}
+      - name: Check if changes only in kalium submodule
+        id: check_changes
+        run: |
+          NUM_CHANGES=$(git diff origin/develop --name-only | grep -v '^kalium/' | wc -l)
+          if [ "$NUM_CHANGES" -gt 0 ]; then
+            echo "::set-output name=shouldCherryPick::true"
+          else
+            echo "No changes outside of kalium submodule, skipping cherry-pick"
+            echo "::set-output name=shouldCherryPick::false"
+          fi
 
-            - name: Create PR
-              id: cpr
-              uses: peter-evans/create-pull-request@v5
-              with:
-                  title: Cherry-pick to develop
-                  base: develop
-                  branch: "${{ steps.extract.outputs.newBranchName }}"
-                  body: ${{ github.event.pull_request.body }}
+      - name: Cherry-pick commits
+        run: |
+          git fetch origin develop:develop
+          git checkout -b ${{ steps.extract.outputs.newBranchName }} develop
+          # Cherry-picking the last commit on the base branch
+          git cherry-pick -x ${{ github.event.pull_request.merge_commit_sha }} --strategy-option theirs || true
+          git add .
+          git commit -m "Cherry-picked commit ${{ github.event.pull_request.merge_commit_sha }}"
+          git push origin ${{ steps.extract.outputs.newBranchName }}
+
+      - name: Create PR
+        if: steps.check_changes.outputs.shouldCherryPick == 'true'
+        id: cpr
+        uses: peter-evans/create-pull-request@v5
+        with:
+          title: ${{ github.event.pull_request.title }}
+          base: develop
+          assignees: ${{ github.event.pull_request.user.login }}
+          branch: "${{ steps.extract.outputs.newBranchName }}"
+          body: "${{ format('Cherry pick from the original PR: \n- #{0}\n\n ---- \n{1}', github.event.pull_request.number, github.event.pull_request.body) }}"
