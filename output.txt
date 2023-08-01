@@ -1,0 +1,1 @@
+CONFLICT (modify/delete): Other.md deleted in HEAD and modified in ee1946f (chore: hotfix3 (#37)).  Version ee1946f (chore: hotfix3 (#37)) of Other.md left in tree.
