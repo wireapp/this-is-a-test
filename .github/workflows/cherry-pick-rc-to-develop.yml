@@ -51,7 +51,7 @@ jobs:
           OUTPUT=$(git cherry-pick ${{ github.event.pull_request.merge_commit_sha }} --strategy-option theirs || true)
           echo "$OUTPUT" | grep 'CONFLICT' > output.txt
           git add .
-          git cherry-pick --continue || true
+          git cherry-pick --continue || echo "No cherry-pick in progress"
           git push origin ${{ steps.extract.outputs.newBranchName }}
 
       - name: Create PR
