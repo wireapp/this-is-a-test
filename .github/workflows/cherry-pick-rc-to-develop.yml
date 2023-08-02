@@ -34,7 +34,6 @@ jobs:
 
       - name: Cherry-pick commits
         id: cherry
-        if: steps.check_changes.outputs.shouldCherryPick == 'true'
         run: |
           set -x
           git fetch origin develop:develop
