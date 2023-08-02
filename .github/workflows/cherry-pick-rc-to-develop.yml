@@ -46,7 +46,7 @@ jobs:
           git push origin ${{ env.newBranchName }} || (echo "Failed to push to origin" && exit 1)
           
           if [ -n "$CONFLICTS" ]; then
-              echo "\n\n ---- \n\n ⚠️ Conflicts during cherry-pick:\n$CONFLICTS\n\n" > CONFLICTS_MESSAGE
+              echo "---- \n\n ⚠️ Conflicts during cherry-pick:\n$CONFLICTS\n\n" > CONFLICTS_MESSAGE
           else
               echo "" > CONFLICTS_MESSAGE
           fi
@@ -57,5 +57,5 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BRANCH: ${{ env.newBranchName }}
           PR_ASSIGNEE: ${{ github.event.pull_request.user.login }}
-          PR_BODY: "${{ format('Cherry pick from the original PR: \n- #{0}{1}{2}', github.event.pull_request.number, env.conflictsMessage, github.event.pull_request.body) }}"
+          PR_BODY: "${{ format('Cherry pick from the original PR: \n- #{0}\n\n{1}{2}', github.event.pull_request.number, env.conflictsMessage, github.event.pull_request.body) }}"
         run: gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base develop --head $PR_BRANCH --label "cherry-pick" --assignee "$PR_ASSIGNEE"
