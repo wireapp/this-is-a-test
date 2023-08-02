@@ -41,21 +41,21 @@ jobs:
           # Cherry-picking the last commit on the base branch
           OUTPUT=$(git cherry-pick ${{ github.event.pull_request.merge_commit_sha }} --strategy-option theirs || true)
           CONFLICTS=$(echo "$OUTPUT" | grep 'CONFLICT' || echo "")
-          echo "conflicts=$CONFLICTS" >> $GITHUB_ENV
           git add .
           git cherry-pick --continue || true
-          git push origin ${{ steps.extract.outputs.newBranchName }} || (echo "Failed to push to origin" && exit 1)
+          git push origin ${{ env.newBranchName }} || (echo "Failed to push to origin" && exit 1)
+          
+          if [ -n "$CONFLICTS" ]; then
+              echo "\n\n ---- \n\n ⚠️ Conflicts during cherry-pick:\n$CONFLICTS\n\n" > CONFLICTS_MESSAGE
+          else
+              echo "" > CONFLICTS_MESSAGE
+          fi
+          echo "conflictsMessage=$(cat CONFLICTS_MESSAGE)" >> $GITHUB_ENV
 
       - name: Create PR
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BRANCH: ${{ env.newBranchName }}
           PR_ASSIGNEE: ${{ github.event.pull_request.user.login }}
-        run: |
-          if [[ -n "${{ steps.cherry.outputs.conflicts }}" ]]; then
-             CONFLICTS_MESSAGE="\n\n ---- \n\n ⚠️ Conflicts during cherry-pick:\n${{ env.conflicts }}\n\n"
-           else
-             CONFLICTS_MESSAGE=""
-           fi
-          PR_BODY="${{ format('Cherry pick from the original PR: \n- #{0}{1}{2}', github.event.pull_request.number, CONFLICTS_MESSAGE, github.event.pull_request.body) }}"
-          gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base develop --head $PR_BRANCH --label "cherry-pick" --assignee "$PR_ASSIGNEE"
+          PR_BODY: "${{ format('Cherry pick from the original PR: \n- #{0}{1}{2}', github.event.pull_request.number, env.conflictsMessage, github.event.pull_request.body) }}"
+        run: gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base develop --head $PR_BRANCH --label "cherry-pick" --assignee "$PR_ASSIGNEE"
