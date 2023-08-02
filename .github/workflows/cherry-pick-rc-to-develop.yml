@@ -24,6 +24,7 @@ jobs:
       - name: Append -cherry-pick to branch name
         id: extract
         run: |
+          set -x
           PR_BRANCH="${{ github.event.pull_request.head.ref }}"
           NEW_BRANCH_NAME="${PR_BRANCH}-cherry-pick"
           echo "New branch name: $NEW_BRANCH_NAME"
@@ -46,6 +47,7 @@ jobs:
         id: cherry
         if: steps.check_changes.outputs.shouldCherryPick == 'true'
         run: |
+          set -x
           git fetch origin develop:develop
           git checkout -b ${{ steps.extract.outputs.newBranchName }} develop
           # Cherry-picking the last commit on the base branch
