@@ -48,7 +48,7 @@ jobs:
           git push origin ${{ env.newBranchName }} || (echo "Failed to push to origin" && exit 1)
           
           if [ -n "$CONFLICTS" ]; then
-              printf "---- \n\n ⚠️ Conflicts during cherry-pick:\n$CONFLICTS\n\n" > CONFLICTS_MESSAGE
+              echo -e "---- \n\n ⚠️ Conflicts during cherry-pick:\n$CONFLICTS\n\n" > CONFLICTS_MESSAGE
           else
               echo "" > CONFLICTS_MESSAGE
           fi
