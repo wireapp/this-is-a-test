@@ -41,8 +41,10 @@ jobs:
           # Cherry-picking the last commit on the base branch
           OUTPUT=$(git cherry-pick ${{ github.event.pull_request.merge_commit_sha }} --strategy-option theirs || true)
           CONFLICTS=$(echo "$OUTPUT" | grep 'CONFLICT' || echo "")
-          git add .
-          git cherry-pick --continue || true
+          if [ -n "$CONFLICTS" ]; then
+              git add .
+              git cherry-pick --continue || true
+          fi
           git push origin ${{ env.newBranchName }} || (echo "Failed to push to origin" && exit 1)
           
           if [ -n "$CONFLICTS" ]; then
