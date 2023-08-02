@@ -40,10 +40,13 @@ jobs:
           git checkout -b ${{ env.newBranchName }} develop
           # Cherry-picking the last commit on the base branch
           OUTPUT=$(git cherry-pick ${{ github.event.pull_request.merge_commit_sha }} --strategy-option theirs || true)
-          CONFLICTS=$(echo "$OUTPUT" | grep 'CONFLICT')
-          echo "conflicts=$CONFLICTS" >> $GITHUB_ENV
+          echo "$OUTPUT"
+          CONFLICTS=$(echo "$OUTPUT" | grep 'CONFLICT' || echo "")
+          echo "CONFLICTS=$CONFLICTS" >> $GITHUB_ENV
           git add .
+          echo "git add"
           git cherry-pick --continue || echo "No cherry-pick in progress"
+          echo "cherry-pick --continue"
           git push origin ${{ env.newBranchName }} || (echo "Failed to push to origin" && exit 1)
 
       - name: Create PR
