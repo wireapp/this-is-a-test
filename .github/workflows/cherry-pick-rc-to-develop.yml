@@ -56,10 +56,10 @@ jobs:
         run: |
           set -x
           if [ -n "${{ env.conflicts }}" ]; then
-              echo "---- \n\n ⚠️ Conflicts during cherry-pick:\n${{ env.conflicts }}\n\n" > CONFLICTS_MESSAGE
+              echo "---- \n\n ⚠️ Conflicts during cherry-pick:\n${{ env.CONFLICTS }}\n\n" > CONFLICTS_MESSAGE
           else
               echo "" > CONFLICTS_MESSAGE
           fi
           CONFLICTS_MESSAGE=$(cat CONFLICTS_MESSAGE)
-          PR_BODY="${{ format('Cherry pick from the original PR: \n- #{0}\n\n{1}{2}', github.event.pull_request.number, CONFLICTS_MESSAGE, github.event.pull_request.body) }}"
+          PR_BODY=$(printf 'Cherry pick from the original PR: \n- #%s\n\n%s%s' "${{ github.event.pull_request.number }}" "$CONFLICTS_MESSAGE" "${{ github.event.pull_request.body }}")
           gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base develop --head "$PR_BRANCH" --label "cherry-pick" --assignee "$PR_ASSIGNEE"
