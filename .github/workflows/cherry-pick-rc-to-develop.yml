@@ -17,42 +17,56 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Append -cherry-pick to branch name
         id: extract
         run: |
-          set -x
           PR_BRANCH="${{ github.event.pull_request.head.ref }}"
           NEW_BRANCH_NAME="${PR_BRANCH}-cherry-pick"
           echo "New branch name: $NEW_BRANCH_NAME"
           echo "newBranchName=$NEW_BRANCH_NAME" >> $GITHUB_ENV
 
+      - name: Check if changes only in this-is-another-test submodule
+        id: check_changes
+        run: |
+          NUM_CHANGES=$(git diff origin/develop --name-only | grep -v '^this-is-another-test/' | wc -l)
+          if [ "$NUM_CHANGES" -gt 0 ]; then
+            echo "::set-output name=shouldCherryPick::true"
+          else
+            echo "No changes outside of this-is-another-test submodule, skipping cherry-pick"
+            echo "::set-output name=shouldCherryPick::false"
+          fi
+
       - uses: fregante/setup-git-user@v2
 
       - name: Cherry-pick commits
         id: cherry
+        if: steps.check_changes.outputs.shouldCherryPick == 'true'
         run: |
           set -x
           git fetch origin develop:develop
           git checkout -b ${{ env.newBranchName }} develop
           # Cherry-picking the last commit on the base branch
           OUTPUT=$(git cherry-pick ${{ github.event.pull_request.merge_commit_sha }} --strategy-option theirs || true)
-          CONFLICTS=$(echo "$OUTPUT" | grep 'CONFLICT' || echo "")
-          if [ -n "$CONFLICTS" ]; then
-              git add .
-              git cherry-pick --continue || true
+          if [[ "$OUTPUT" == *"CONFLICT"* ]]; then
+              # Reset changes in 'this-is-another-test' directory
+              git checkout HEAD -- this-is-another-test
+              # Commit the remaining conflicts
+              git commit -am "Commit with unresolved merge conflicts outside of this-is-another-test"
           fi
           git push origin ${{ env.newBranchName }} || (echo "Failed to push to origin" && exit 1)
-          echo "conflicts=$CONFLICTS" >> $GITHUB_ENV
+          # Get list of conflicted files
+          CONFLICTED_FILES=$(git diff --name-only --diff-filter=U)
+          echo "conflictedFiles=$CONFLICTED_FILES" >> $GITHUB_ENV
 
       - name: Create PR
+        if: steps.check_changes.outputs.shouldCherryPick == 'true'
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BRANCH: ${{ env.newBranchName }}
           PR_ASSIGNEE: ${{ github.event.pull_request.user.login }}
-          PR_BODY: "${{ format('Cherry pick from the original PR: \n- #{0}\n\n---- \n\n ⚠️ Conflicts during cherry-pick:\n{1}\n\n{2}', github.event.pull_request.number, env.conflicts, github.event.pull_request.body) }}"
-        run: |
-          gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base develop --head "$PR_BRANCH" --label "cherry-pick" --assignee "$PR_ASSIGNEE"
+          PR_BODY: "${{ format('Cherry pick from the original PR: \n- #{0}\n\n---- \n\n ⚠️ Conflicts during cherry-pick:\n{1}\n\n{2}', github.event.pull_request.number, env.conflictedFiles, github.event.pull_request.body) }}"
+        run: gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base develop --head "$PR_BRANCH" --label "cherry-pick" --assignee "$PR_ASSIGNEE"
