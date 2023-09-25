@@ -50,7 +50,7 @@ jobs:
           git fetch origin develop:develop
           git checkout -b ${{ env.newBranchName }} develop
           # Cherry-picking the last commit on the base branch
-          OUTPUT=$(git cherry-pick ${{ github.event.pull_request.merge_commit_sha }} --strategy-option theirs || true)
+          OUTPUT=$(git cherry-pick ${{ github.event.pull_request.merge_commit_sha }} || true)
           if [[ "$OUTPUT" == *"CONFLICT"* ]]; then
               # Reset changes in 'this-is-another-test' directory
               git checkout HEAD -- this-is-another-test
