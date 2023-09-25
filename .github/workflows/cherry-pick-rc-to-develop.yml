@@ -51,6 +51,8 @@ jobs:
           git checkout -b ${{ env.newBranchName }} develop
           # Cherry-picking the last commit on the base branch
           OUTPUT=$(git cherry-pick ${{ github.event.pull_request.merge_commit_sha }} || true)
+          # Get list of conflicted files
+          CONFLICTED_FILES=$(git diff --name-only --diff-filter=U)
           if [[ "$OUTPUT" == *"CONFLICT"* ]]; then
               # Reset changes in 'this-is-another-test' directory
               git checkout HEAD -- this-is-another-test
@@ -58,8 +60,6 @@ jobs:
               git commit -am "Commit with unresolved merge conflicts outside of this-is-another-test"
           fi
           git push origin ${{ env.newBranchName }} || (echo "Failed to push to origin" && exit 1)
-          # Get list of conflicted files
-          CONFLICTED_FILES=$(git diff --name-only --diff-filter=U)
           echo "conflictedFiles=$CONFLICTED_FILES" >> $GITHUB_ENV
 
       - name: Create PR
