@@ -1,5 +1,5 @@
 # Conflict file
 
-Some dev change 10
+Some rc change 9
 
-Some dev change 12
+Some rc change 8
