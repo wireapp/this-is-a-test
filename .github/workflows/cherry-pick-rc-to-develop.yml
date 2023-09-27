@@ -77,7 +77,7 @@ jobs:
           CONFLICTED_FILES=$(git diff --name-only --diff-filter=U)
           if [[ "$OUTPUT" == *"CONFLICT"* ]]; then
               # Commit the remaining conflicts
-              git commit -am "Commit with unresolved merge conflicts outside of this-is-another-test"
+              git commit -am "Commit with unresolved merge conflicts outside of ${{ env.SUBMODULE_NAME }}"
           fi
           
           # Push branch and remove temp
