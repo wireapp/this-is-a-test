@@ -1,3 +1,3 @@
 # Conflict file
 
-Some new rc change 16
+Some new rc cool change
