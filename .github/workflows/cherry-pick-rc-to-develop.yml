@@ -17,6 +17,8 @@
 # 8. A new pull request is created against `develop` with the cherry-picked changes.
 #
 # Note: Ensure you add a "cherry-pick" label to your project. This label is required for the creation of cherry-picked PRs.
+# If needed, you can also set the `TARGET_BRANCH` environment variable to specify a different target branch for the cherry-pick.
+# By default, it's set to `develop`.
 
 name: "Cherry-pick from rc to develop"
 
@@ -27,8 +29,10 @@ on:
     types:
       - closed
 
-# Uncomment and add submodule name here
 env:
+
+  TARGET_BRANCH: develop
+  # Uncomment and add submodule name here
   SUBMODULE_NAME: this-is-another-test
 
 jobs:
@@ -59,10 +63,10 @@ jobs:
         run: |
           if [[ -n "${{ env.SUBMODULE_NAME }}" ]]; then
             # If SUBMODULE_NAME is set
-            NUM_CHANGES=$(git diff origin/develop --name-only | grep -v "^${{ env.SUBMODULE_NAME }}/" | wc -l)
+            NUM_CHANGES=$(git diff origin/${{ env.TARGET_BRANCH }} --name-only | grep -v "^${{ env.SUBMODULE_NAME }}/" | wc -l)
           else
             # If SUBMODULE_NAME is not set
-            NUM_CHANGES=$(git diff origin/develop --name-only | wc -l)
+            NUM_CHANGES=$(git diff origin/${{ env.TARGET_BRANCH }} --name-only | wc -l)
           fi
           if [ "$NUM_CHANGES" -gt 0 ]; then
                echo "shouldCherryPick=true" >> $GITHUB_ENV
@@ -85,11 +89,11 @@ jobs:
           git checkout -b temp-branch-for-cherry-pick
           LAST_COMMIT_MESSAGE=$(git log --format=%B -n 1 ${{ github.event.pull_request.merge_commit_sha }})
           cd ${{ env.SUBMODULE_NAME }}
-          git checkout develop
-          git pull origin develop
+          git checkout ${{ env.TARGET_BRANCH }}
+          git pull origin ${{ env.TARGET_BRANCH }}
           cd ..
           git add ${{ env.SUBMODULE_NAME }}
-          git commit -m "Update submodule ${{ env.SUBMODULE_NAME }} to latest from develop"
+          git commit -m "Update submodule ${{ env.SUBMODULE_NAME }} to latest from ${{ env.TARGET_BRANCH }}"
           echo "lastCommitMessage=LAST_COMMIT_MESSAGE" >> $GITHUB_ENV
 
       - name: Get Cherry-pick commit
@@ -111,7 +115,7 @@ jobs:
         if: env.shouldCherryPick == 'true'
         run: |
           # Checkout the desired branch and cherry-pick the commit  
-          git checkout develop
+          git checkout ${{ env.TARGET_BRANCH }}
           git checkout -b ${{ env.newBranchName }}
           OUTPUT=$(git cherry-pick ${{ env.cherryPickCommit }} || true)
           
@@ -136,4 +140,4 @@ jobs:
           PR_BRANCH: ${{ env.newBranchName }}
           PR_ASSIGNEE: ${{ github.event.pull_request.user.login }}
           PR_BODY: "${{ format('Cherry pick from the original PR: \n- #{0}\n\n---- \n\n ⚠️ Conflicts during cherry-pick:\n{1}\n\n{2}', github.event.pull_request.number, env.conflictedFiles, github.event.pull_request.body) }}"
-        run: gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base develop --head "$PR_BRANCH" --label "cherry-pick" --assignee "$PR_ASSIGNEE"
+        run: gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base ${{ env.TARGET_BRANCH }} --head "$PR_BRANCH" --label "cherry-pick" --assignee "$PR_ASSIGNEE"
