@@ -1,3 +1,3 @@
 # Conflict file
 
-Some new rc cool change v3
+Some new rc cool change v4
